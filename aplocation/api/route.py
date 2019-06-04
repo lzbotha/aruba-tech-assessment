@@ -62,9 +62,3 @@ def get_location_from_ap_scans():
     location_response = make_geolocation_request(wifi_access_points)
 
     return jsonify(location_response), 200
-
-
-
-# TODO: move this somewhere sensible
-if __name__ == '__main__':
-    app.run(debug=True)
