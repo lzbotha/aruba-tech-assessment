@@ -1,8 +1,9 @@
+import os
 import requests
 
 url = 'https://www.googleapis.com/geolocation/v1/geolocate'
 params = {
-    'key': '',
+    'key': os.environ['GEOLOCATION_API_KEY'],
 }
 
 
