@@ -1,4 +1,5 @@
-key
+.DS_Store
+data
 todo.txt
 
 # Created by https://www.gitignore.io/api/python

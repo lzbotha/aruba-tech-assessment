@@ -1,30 +1,28 @@
+# TODO: rename this file
+
 import os
+import json
 import requests
 
-url = 'https://www.googleapis.com/geolocation/v1/geolocate'
-params = {
-    'key': os.environ['GEOLOCATION_API_KEY'],
-}
+_API_URL = 'https://www.googleapis.com/geolocation/v1/geolocate'
 
 
-# TODO figure out if there is more information that can be used here
-payload = {
-    'wifiAccessPoints': [
-        {
-            'macAddress': '9c:b2:b2:66:c1:be',
-        },
-        {
-            'macAddress': '84:78:ac:b9:76:19',
-        },
-    ],
-}
-import json
-r = requests.post(
-    url=url, 
-    params=params,
-    json=json.dumps(payload)
-)
+def make_geolocation_request(wifi_access_points):
 
+    # TODO figure out if there is more information that can be used here
+    payload = {
+        'wifiAccessPoints': wifi_access_points,
+    }
 
-print(r.url)
-print(r.text)
+    params = {
+        'key': os.environ['GEOLOCATION_API_KEY'],
+    }
+
+    r = requests.post(
+        url=_API_URL, 
+        params=params,
+        json=json.dumps(payload)
+    )
+    
+
+    return(r.json())
