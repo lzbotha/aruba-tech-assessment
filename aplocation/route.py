@@ -1,6 +1,5 @@
 import time
 import os
-import logging
 import json
 import re
 
@@ -11,6 +10,9 @@ from flask import abort, Response
 from aplocation.geolocation import make_geolocation_request
 
 app = Flask(__name__)
+
+import logging
+logger = logging.getLogger(__name__)
 
 
 def scan_is_valid(scan):
@@ -36,7 +38,8 @@ def scan_is_valid(scan):
 
 def apscan_to_wifiAccessPoint(scan):
     """
-    Helper method that converts between the input apscan format and the one Goolge expects
+    Helper method that converts between the input apscan format and the one Goolge expects.
+    Ignores optional inputs if they are invalid.
 
     Args:
         scan: apscan dictionary
@@ -47,15 +50,24 @@ def apscan_to_wifiAccessPoint(scan):
 
     _scan = {"macAddress": scan['bssid']}
 
-    # TODO: add validation for these values
+    # These parameters are optional. As such if they fail validation we can ignore them.
     if 'rssi' in scan:
-        _scan["signalStrength"] = scan['rssi']
+        if isinstance(scan['rssi'], int) or isinstance(scan['rssi'], float):
+            _scan["signalStrength"] = scan['rssi']
+        else:
+            logger.info('Non float rssi value found. Ignoring it.')
 
     if 'timestamp' in scan:
-        _scan["age"] =  round(time.time() - scan['timestamp'])
+        if (isinstance(scan['timestamp'], int) or isinstance(scan['timestamp'], float)) and scan['timestamp'] > 0:
+            _scan["age"] =  round(time.time() - scan['timestamp'])
+        else:
+            logger.info('Invalid timestamp recieved. Ignoring it.')
         
     if 'channel' in scan:
-        _scan["channel"] = eval(scan["channel"])
+        if isinstance(scan['channel'], int)  and scan['timestamp'] > 0:
+            _scan["channel"] = eval(scan["channel"])
+        else:
+            logger.info('Invalid channel recieved. Ignoring it.')
     
     return _scan
 
@@ -79,15 +91,11 @@ def request_body_to_wifiAccessPoints(request_dict):
     for scan in request_dict['apscan_data']:
         if scan_is_valid(scan):
             scans.append(apscan_to_wifiAccessPoint(scan))
-
         else:
-            # If a scan is malformed dont include it and try to get the location anyway
-            # potentially return with warning?
-            # TODO: log a warning / info here
-            pass
+            logger.info('Invalid apscan found. Ignoring it.')
 
+    # At least 2 scans are required to do a geolocation lookup
     if len(scans) < 2:
-        # TODO: we need at least 2 to do a geolocation lookup
         abort(Response(
             status=400, 
             mimetype='application/json',
@@ -106,7 +114,7 @@ def get_location_from_ap_scans():
     try:
         api_key = os.environ['GEOLOCATION_API_KEY']
     except KeyError:
-        logging.error("GEOLOCATION_API_KEY environment variable not set")
+        logger.error("GEOLOCATION_API_KEY environment variable not set")
 
         abort(Response(
             status=500, 
@@ -137,7 +145,7 @@ def get_location_from_ap_scans():
             })
         ))
 
-        logging.error(f"Geolocation error {location_response['error']}")
+        logger.error(f"Geolocation error {location_response['error']}")
 
         abort(Response(
             status=500, 
