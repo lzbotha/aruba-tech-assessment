@@ -7,22 +7,10 @@ from flask import Flask, jsonify
 from flask import request
 from flask import abort, Response
 
-from aplocation.geolocation.uh import make_geolocation_request
+from aplocation.geolocation import make_geolocation_request
 
 app = Flask(__name__)
 
-
-# @app.route('/todo/api/v1.0/tasks', methods=['POST'])
-# def create_task():
-#     if not request.json or not 'title' in request.json:
-#         abort(400)
-#     task = {
-#         'title': request.json['title'],
-#         'description': request.json.get('description', ""),
-#         'done': False
-#     }
-#     print(task)
-#     return jsonify({'teask': task}), 201
 
 def scan_is_valid(scan):
     # TODO check that this scan has all the needed pieces and that they are valid
