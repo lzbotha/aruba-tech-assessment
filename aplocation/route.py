@@ -126,15 +126,17 @@ def get_location_from_ap_scans():
         ))
         
 
-    # TODO: validate the request body
+    # Get the list of wifi access points in the format Geolocation expects
     wifi_access_points = request_body_to_wifiAccessPoints(request.json)
 
+    # Query the Geolocation API
     location_response = make_geolocation_request(wifi_access_points, api_key)
 
-    # Return a 500 if there something went wrong with the lookup
+    # Check for errors in the response
     if 'error' in location_response:
 
-        # If the location cannot be found  return a 404
+        # If the location cannot be found return a 404
+        logger.info("Location not found")
         if location_response['error']['code'] == 404:
             abort(Response(
             status=404, 
@@ -144,7 +146,8 @@ def get_location_from_ap_scans():
                 'message': 'Location not found',
             })
         ))
-
+        
+        # Otherwise return a 500 if something else went wrong
         logger.error(f"Geolocation error {location_response['error']}")
 
         abort(Response(
