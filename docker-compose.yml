@@ -5,4 +5,4 @@ services:
     ports:
       - "5000:5000"
     environment:
-      - GEOLOCATION_API_KEY="${GEOLOCATION_API_KEY}"
+      - GEOLOCATION_API_KEY=${GEOLOCATION_API_KEY}

@@ -13,6 +13,4 @@ RUN pip3 install .
 
 EXPOSE 5000
 
-CMD python3 wsgi.py
-# This potentially breaks because of an ENV issue with gunicorn. Add logging to test.
-# CMD gunicorn --bind 0.0.0.0:5000 wsgi:app
+CMD gunicorn --bind 0.0.0.0:5000 wsgi:app
