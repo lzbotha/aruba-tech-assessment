@@ -1,0 +1,16 @@
+.gitignore
+
+### Python ###
+# Byte-compiled / optimized / DLL files
+.tox
+__pycache__/
+*.py[cod]
+*$py.class
+
+Dockerfile
+docker-compose.yml
+
+data/
+scripts/
+
+README.md
