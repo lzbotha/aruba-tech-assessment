@@ -1,13 +1,12 @@
 # TODO: rename this file
 
-import os
 import json
 import requests
 
 _API_URL = 'https://www.googleapis.com/geolocation/v1/geolocate'
 
 
-def make_geolocation_request(wifi_access_points):
+def make_geolocation_request(wifi_access_points, api_key):
 
     # TODO figure out if there is more information that can be used here
     payload = {
@@ -15,7 +14,7 @@ def make_geolocation_request(wifi_access_points):
     }
 
     params = {
-        'key': os.environ['GEOLOCATION_API_KEY'],
+        'key': api_key,
     }
 
     r = requests.post(

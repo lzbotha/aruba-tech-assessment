@@ -1,8 +1,11 @@
 import time
+import os
+import logging
+import json
 
 from flask import Flask, jsonify
 from flask import request
-from flask import abort
+from flask import abort, Response
 
 from aplocation.geolocation.uh import make_geolocation_request
 
@@ -55,10 +58,27 @@ def request_body_to_wifiAccessPoints(request_dict):
 
 @app.route('/api/v1.0/location', methods=['POST'])
 def get_location_from_ap_scans():
+
+    try:
+        api_key = os.environ['GEOLOCATION_API_KEY'], # this crashes if the ENV variable is not set
+    except KeyError:
+        
+        logging.error("GEOLOCATION_API_KEY environment variable not set")
+        
+        abort(Response(
+            status=500, 
+            mimetype='application/json',
+            response=json.dumps({
+                'code': 500,
+                'message': 'Server configuration error',
+            })
+        ))
+        
+
     # TODO: validate the request body
     
     wifi_access_points = request_body_to_wifiAccessPoints(request.json)
 
-    location_response = make_geolocation_request(wifi_access_points)
+    location_response = make_geolocation_request(wifi_access_points, api_key)
 
     return jsonify(location_response), 200
