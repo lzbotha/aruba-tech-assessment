@@ -1,16 +1,21 @@
-FROM ubuntu:18.04
+FROM python:3.7-slim as development
 
-RUN apt update
-RUN apt install -y python3-pip python3-dev build-essential libssl-dev libffi-dev python3-setuptools
+WORKDIR /app
 
-RUN pip3 install wheel
-RUN pip3 install gunicorn
+COPY ./requirements.txt ./
+RUN pip install -r requirements.txt
 
-COPY ./ /aplocation
-WORKDIR /aplocation
-
-RUN pip3 install .
+COPY ./ ./
 
 EXPOSE 5000
 
-CMD gunicorn --bind 0.0.0.0:5000 wsgi:app
+ENV PYTHONPATH=/aplocation
+
+ENV FLASK_APP='aplocation.route:app'
+ENV FLASK_DEBUG=1
+
+CMD ["flask", "run", "--host=0.0.0.0"]
+
+FROM development as production
+
+CMD ["gunicorn", "--bind=0.0.0.0:5000", "aplocation.route:app"]

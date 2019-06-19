@@ -1,8 +1,13 @@
-version: '3'
+version: '3.7'
+
 services:
   aplocation:
-    build: ./
+    build:
+      context: ./
+      target: development
     ports:
       - "5000:5000"
     environment:
       - GEOLOCATION_API_KEY=${GEOLOCATION_API_KEY}
+    volumes:
+      - "./aplocation:/app/aplocation"
