@@ -79,7 +79,7 @@ def get_api_key():
             })
         ))
 
-def check_errors(location_response):
+def handle_errors(location_response):
     """
     Check the Geolocation response for errors and deal with them appropriately.
 
@@ -115,6 +115,20 @@ def check_errors(location_response):
             })
         ))
 
+def fetch_response_from_cache(wifi_access_points):
+    """
+    Placeholder method for caching functionality.
+
+    Args:
+        wifi_access_points: a list of dictionaries containing the converted apscans
+
+    Returns:
+        bool:   true if result is cached false otherwise
+        dict:   the cached response
+    """
+
+    return False, None
+
 @app.route('/api/v1.0/location', methods=['POST'])
 def get_location_from_ap_scans():
 
@@ -124,10 +138,15 @@ def get_location_from_ap_scans():
     # Get the list of wifi access points in the format Geolocation expects
     wifi_access_points = request_body_to_wifiAccessPoints(request.json)
 
+    # Hit the cache
+    success, response = fetch_response_from_cache(wifi_access_points)
+    if success:
+        return jsonify(response), 200
+
     # Query the Geolocation API
     location_response = make_geolocation_request(wifi_access_points, api_key)
 
     # Check for errors in the response
-    check_errors(location_response)
+    handle_errors(location_response)
 
     return jsonify(location_response), 200

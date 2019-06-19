@@ -19,6 +19,7 @@ def scan_is_valid(scan):
     if 'bssid' not in scan: # macAddress is the only compulsory field 
         return False
 
+    # Validate the format of the macAddress
     # Code borrowed from https://stackoverflow.com/questions/7629643/how-do-i-validate-the-format-of-a-mac-address
     if not re.match("[0-9a-f]{2}([-:]?)[0-9a-f]{2}(\\1[0-9a-f]{2}){4}$", scan['bssid'].lower()):
         return False
@@ -53,7 +54,13 @@ def apscan_to_wifiAccessPoint(scan):
             logger.info('Invalid timestamp recieved. Ignoring it.')
         
     if 'channel' in scan:
-        if isinstance(scan['channel'], int)  and scan['timestamp'] > 0:
+        # Channels are strings coming, but could be ints
+        try:
+            chan = eval(scan['channel'])
+        except:
+            chan = scan['channel']
+
+        if isinstance(chan, int)  and chan > 0:
             _scan["channel"] = eval(scan["channel"])
         else:
             logger.info('Invalid channel recieved. Ignoring it.')
