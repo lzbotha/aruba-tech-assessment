@@ -59,12 +59,12 @@ def request_body_to_wifiAccessPoints(request_dict):
 @app.route('/api/v1.0/location', methods=['POST'])
 def get_location_from_ap_scans():
 
+    # Get the API key for the geolocation API
     try:
-        api_key = os.environ['GEOLOCATION_API_KEY'], # this crashes if the ENV variable is not set
+        api_key = os.environ['GEOLOCATION_API_KEY']
     except KeyError:
-        
         logging.error("GEOLOCATION_API_KEY environment variable not set")
-        
+
         abort(Response(
             status=500, 
             mimetype='application/json',
@@ -76,9 +76,21 @@ def get_location_from_ap_scans():
         
 
     # TODO: validate the request body
-    
     wifi_access_points = request_body_to_wifiAccessPoints(request.json)
 
     location_response = make_geolocation_request(wifi_access_points, api_key)
+
+    # Return a 500 if there something went wrong with the lookup
+    if 'error' in location_response:
+        logging.error(f"Geolocation error {location_response['error']}")
+
+        abort(Response(
+            status=500, 
+            mimetype='application/json',
+            response=json.dumps({
+                'code': 500,
+                'message': 'Server error',
+            })
+        ))
 
     return jsonify(location_response), 200
