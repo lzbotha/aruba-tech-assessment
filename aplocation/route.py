@@ -2,6 +2,7 @@ import time
 import os
 import logging
 import json
+import re
 
 from flask import Flask, jsonify
 from flask import request
@@ -24,10 +25,13 @@ def scan_is_valid(scan):
         bool true if valid false otherwise
     """
 
-    # TODO check that this scan has all the needed pieces and that they are valid
     if 'bssid' not in scan: # macAddress is the only compulsory field 
         return False
-        
+
+    # Code borrowed from https://stackoverflow.com/questions/7629643/how-do-i-validate-the-format-of-a-mac-address
+    if not re.match("[0-9a-f]{2}([-:]?)[0-9a-f]{2}(\\1[0-9a-f]{2}){4}$", scan['bssid'].lower()):
+        return False
+
     return True
 
 def apscan_to_wifiAccessPoint(scan):
@@ -43,17 +47,16 @@ def apscan_to_wifiAccessPoint(scan):
 
     _scan = {"macAddress": scan['bssid']}
 
-    # Check for the optional fields and add them if present
-    if 'signalStrength' in scan:
-        _scan["signalStrength"] = scan['rssi'],
+    # TODO: add validation for these values
+    if 'rssi' in scan:
+        _scan["signalStrength"] = scan['rssi']
 
-    if 'age' in scan:
+    if 'timestamp' in scan:
         _scan["age"] =  round(time.time() - scan['timestamp'])
         
     if 'channel' in scan:
         _scan["channel"] = eval(scan["channel"])
     
-
     return _scan
 
 def request_body_to_wifiAccessPoints(request_dict):
@@ -122,6 +125,18 @@ def get_location_from_ap_scans():
 
     # Return a 500 if there something went wrong with the lookup
     if 'error' in location_response:
+
+        # If the location cannot be found  return a 404
+        if location_response['error']['code'] == 404:
+            abort(Response(
+            status=404, 
+            mimetype='application/json',
+            response=json.dumps({
+                'code': 404,
+                'message': 'Location not found',
+            })
+        ))
+
         logging.error(f"Geolocation error {location_response['error']}")
 
         abort(Response(
