@@ -13,18 +13,63 @@ app = Flask(__name__)
 
 
 def scan_is_valid(scan):
+    """
+    Check if an input scan dictionary is valid / can be converted to the Geolocation
+    format.
+
+    Args:
+        scan: apscan dictionary
+
+    Returns:
+        bool true if valid false otherwise
+    """
+
     # TODO check that this scan has all the needed pieces and that they are valid
+    if 'bssid' not in scan: # macAddress is the only compulsory field 
+        return False
+        
     return True
 
 def apscan_to_wifiAccessPoint(scan):
-    return {
-        "macAddress": scan['bssid'],
-        "signalStrength": scan['rssi'],
-        "age": round(time.time() - scan['timestamp']),
-        "channel": eval(scan["channel"]),
-    }
+    """
+    Helper method that converts between the input apscan format and the one Goolge expects
+
+    Args:
+        scan: apscan dictionary
+
+    Returns:
+        dictionary containing the apscan in Google format
+    """
+
+    _scan = {"macAddress": scan['bssid']}
+
+    # Check for the optional fields and add them if present
+    if 'signalStrength' in scan:
+        _scan["signalStrength"] = scan['rssi'],
+
+    if 'age' in scan:
+        _scan["age"] =  round(time.time() - scan['timestamp'])
+        
+    if 'channel' in scan:
+        _scan["channel"] = eval(scan["channel"])
+    
+
+    return _scan
 
 def request_body_to_wifiAccessPoints(request_dict):
+    """
+    Convert a dictionary of access point scans into the format expected by the 
+    Geolocation API.
+
+    Args:
+        request_dict: dictionary containing the apscans
+
+    Returns:
+        a list of dictionaries containing the converted apscans
+
+    Raises:
+        HTTPException: via flask.abort if conversion fails
+    """
     
     scans = []
 
@@ -40,7 +85,14 @@ def request_body_to_wifiAccessPoints(request_dict):
 
     if len(scans) < 2:
         # TODO: we need at least 2 to do a geolocation lookup
-        raise Exception("TODO fix this")
+        abort(Response(
+            status=400, 
+            mimetype='application/json',
+            response=json.dumps({
+                'code': 400,
+                'message': 'API requires at least 2 valid access points',
+            })
+        ))
 
     return scans
 
