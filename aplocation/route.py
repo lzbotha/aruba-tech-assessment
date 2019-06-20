@@ -30,6 +30,16 @@ def request_body_to_wifiAccessPoints(request_dict):
     Raises:
         HTTPException: via flask.abort if conversion fails
     """
+
+    if 'apscan_data' not in request_dict:
+        abort(Response(
+            status=400, 
+            mimetype='application/json',
+            response=json.dumps({
+                'code': 400,
+                'message': 'No apscan_data in request',
+            })
+        ))
     
     scans = []
 
