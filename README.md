@@ -7,6 +7,8 @@ The container needs the GEOLOCATION\_API\_KEY variable set with a valid Geolocat
 ## Testing
 You can build the service using docker-compose. The service will be hosted on port 5000. I've included 2 scripts that I used to test the service with the example data.
 
+The unit tests can be run with nose.
+
 ### example_request.sh
 hit the API with a very small lsit of access points.
 
