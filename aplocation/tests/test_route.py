@@ -2,7 +2,7 @@ import unittest
 
 import werkzeug
 
-from aplocation.route import request_body_to_wifiAccessPoints
+from aplocation.route import request_body_to_wifiAccessPoints, handle_errors
 
 class TestRequestBodyToWifiAccessPoints(unittest.TestCase):
     
@@ -61,11 +61,56 @@ class TestRequestBodyToWifiAccessPoints(unittest.TestCase):
     def test_insufficient_access_points(self):
         # Test that a request with no apscan data fails
         with self.assertRaises(werkzeug.exceptions.HTTPException):
-            request_body_to_wifiAccessPoints({})
+            try:
+                request_body_to_wifiAccessPoints({})
+            except werkzeug.exceptions.HTTPException as e:
+                self.assertEqual(e.response.json['message'], 'No apscan_data in request')
+
+                raise e
 
         # Test that a request with insufficient aps fails
         with self.assertRaises(werkzeug.exceptions.HTTPException):
-            request_body_to_wifiAccessPoints({
-                'apscan_data': []
-            })
-        
+            try:
+                request_body_to_wifiAccessPoints({
+                    'apscan_data': []
+                })
+            except werkzeug.exceptions.HTTPException as e:
+                self.assertEqual(e.response.json['message'], 'API requires at least 2 valid access points')
+
+                raise e
+
+class TestHandleErrors(unittest.TestCase):
+
+    def no_errors(self):
+        # Test that nothing goes wrong if we have no errors
+        handle_errors({})
+
+    def test_location_not_found(self):
+
+        with self.assertRaises(werkzeug.exceptions.HTTPException):
+            try:
+                handle_errors({
+                    'error': {
+                        'code': 404
+                    }
+                })
+            except werkzeug.exceptions.HTTPException as e:
+                self.assertEqual(e.response.json['code'], 404)
+                self.assertEqual(e.response.json['message'], 'Location not found')
+                
+                raise e
+    
+    def test_geolocation_order(self):
+
+        with self.assertRaises(werkzeug.exceptions.HTTPException):
+            try:
+                handle_errors({
+                    'error': {
+                        'code': 500
+                    }
+                })
+            except werkzeug.exceptions.HTTPException as e:
+                self.assertEqual(e.response.json['code'], 500)
+                self.assertEqual(e.response.json['message'], 'Server error')
+                
+                raise e
